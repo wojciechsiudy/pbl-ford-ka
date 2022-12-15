@@ -7,6 +7,7 @@ import os
 
 if(not os.path.exists("/dev/ttyUSB0")):
     print("No USB devices connected. Aborting.")
+    exit()
 
 #read list of connected serials
 serials = os.popen("ls /dev/ttyUSB*")
@@ -20,10 +21,10 @@ for device in serials:
     #get portion of output
     serialTmp= serial.Serial(serialPath, 115200)
     line = str(serialTmp.readline(), encoding="ASCII")
-    print(line) #debug
     #make symlinks of recognized devices
     if "AHRS" in line:
         os.system("sudo ln -s {} /dev/AHRS".format(serialPath))
+        print("AHRS added")
     elif "DIST" in line:
         os.system("sudo ln -s {} /dev/UWBfront".format(serialPath))
 
