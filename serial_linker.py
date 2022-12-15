@@ -5,6 +5,9 @@ import os
 #<username> ALL=(root) NOPASSWD: /usr/bin/ln, /usr/bin/unlink
 #plus adding <username> to dialout group
 
+if(not os.path.exists("/dev/ttyUSB0")):
+    print("No USB devices connected. Aborting.")
+
 #read list of connected serials
 serials = os.popen("ls /dev/ttyUSB*")
 
