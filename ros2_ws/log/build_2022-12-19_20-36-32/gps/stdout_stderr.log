@@ -1,0 +1,41 @@
+running egg_info
+creating ../../build/gps/gps.egg-info
+writing ../../build/gps/gps.egg-info/PKG-INFO
+writing dependency_links to ../../build/gps/gps.egg-info/dependency_links.txt
+writing entry points to ../../build/gps/gps.egg-info/entry_points.txt
+writing requirements to ../../build/gps/gps.egg-info/requires.txt
+writing top-level names to ../../build/gps/gps.egg-info/top_level.txt
+writing manifest file '../../build/gps/gps.egg-info/SOURCES.txt'
+reading manifest file '../../build/gps/gps.egg-info/SOURCES.txt'
+writing manifest file '../../build/gps/gps.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/build
+creating /home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/build/lib
+creating /home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/build/lib/gps
+copying gps/__init__.py -> /home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/build/lib/gps
+copying gps/position_subscriber.py -> /home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/build/lib/gps
+copying gps/position_publisher.py -> /home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/build/lib/gps
+/usr/lib/python3/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+running install
+running install_lib
+creating /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/python3.10/site-packages/gps
+copying /home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/build/lib/gps/__init__.py -> /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/python3.10/site-packages/gps
+copying /home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/build/lib/gps/position_subscriber.py -> /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/python3.10/site-packages/gps
+copying /home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/build/lib/gps/position_publisher.py -> /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/python3.10/site-packages/gps
+byte-compiling /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/python3.10/site-packages/gps/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/python3.10/site-packages/gps/position_subscriber.py to position_subscriber.cpython-310.pyc
+byte-compiling /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/python3.10/site-packages/gps/position_publisher.py to position_publisher.cpython-310.pyc
+running install_data
+creating /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/share/ament_index
+creating /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/share/ament_index/resource_index
+creating /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/share/ament_index/resource_index/packages
+copying resource/gps -> /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/share/ament_index/resource_index/packages
+copying package.xml -> /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/share/gps
+running install_egg_info
+Copying ../../build/gps/gps.egg-info to /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/python3.10/site-packages/gps-0.0.0-py3.10.egg-info
+running install_scripts
+Installing listener script to /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/gps
+Installing talker script to /home/wojtek/pbl/pbl-ford-ka/ros2_ws/install/gps/lib/gps
+writing list of installed files to '/home/wojtek/pbl/pbl-ford-ka/ros2_ws/build/gps/install.log'

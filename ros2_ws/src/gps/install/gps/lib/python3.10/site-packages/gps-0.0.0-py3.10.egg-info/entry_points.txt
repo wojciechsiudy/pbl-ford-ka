@@ -1,0 +1,4 @@
+[console_scripts]
+listener = gps.position_subscriber:main
+talker = gps.position_publisher:main
+
