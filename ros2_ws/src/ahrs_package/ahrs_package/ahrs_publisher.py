@@ -24,17 +24,24 @@ class AhrsPublisher(Node):
 
     def __init__(self):
         super().__init__('ahrs_publisher')
-        self.publisher_ = self.create_publisher(String, 'ahrs', 10)
+        self.publisher_magn = self.create_publisher(String, 'ahrs_magn', 10)
+        self.publisher_gyro = self.create_publisher(String, 'ahrs_gyro', 10)
+        self.publisher_accel = self.create_publisher(String, 'ahrs_accel', 10)
         timer_period = 0.5  # seconds ???
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.i = 0
 
     def timer_callback(self):
-        msg = String()
+        msg_magn = String()
+        msg_gyro = String()
+        msg_accel = String()
         measure = get_data()
-        msg.data = 'Magn: X: %s Y: %s Z: %s Gyro: X: %s Y: %s Z: %s Accel: X: %s Y: %s Z: %s' % (measure.magn.x, measure.magn.y, measure.magn.z, measure.gyro.x, measure.gyro.y, measure.gyro.z, measure.accel.x, measure.accel.y, measure.accel.z, )
-        self.publisher_.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.data)
+        msg_magn.data = 'Magn: X: %s Y: %s Z: %s' % (measure.magn.x, measure.magn.y, measure.magn.z)
+        msg_gyro.data = 'Gyro: X: %s Y: %s Z: %s' % (measure.gyro.x, measure.gyro.y, measure.gyro.z)
+        msg_accel.data = 'Accel: X: %s Y: %s Z: %s' % (measure.accel.x, measure.accel.y, measure.accel.z)
+        self.publisher_magn.publish(msg_magn)
+        self.publisher_gyro.publish(msg_gyro)
+        self.publisher_accel.publish(msg_accel)
+        #self.get_logger().info('Publishing: "%s"' % msg.data)
 
 
 
