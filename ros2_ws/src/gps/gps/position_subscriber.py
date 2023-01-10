@@ -20,7 +20,7 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 
-
+from gps.ka_utils import Point
 
 class PositionSubscriber(Node):
 

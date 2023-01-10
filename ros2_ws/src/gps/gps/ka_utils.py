@@ -11,7 +11,7 @@ class Point:
         self.is_observed = False
 
     def is_around(self, another):
-        distanceDEG = math.sqrt(pow((another.x - self.x), 2)+pow((another.y - self.y), 2))
+        distanceDEG = math.acos((math.sin(another.x) * math.sin(self.x)) + (math.cos(another.x) * math.cos(self.x) * math.cos(abs(another.y - self.y))) )
         distanceNM = distanceDEG * 60
         distance = distanceNM * 1852
         if (distance > POSITION_RADIUS_M):
@@ -40,7 +40,6 @@ def gps_data_to_point(data):
 
 def get_position():
     gps_serial = Serial("/dev/GPS")
-    satellites = 0
     while (True):
         try:
             line = str(gps_serial.readline(), encoding="ASCII")
@@ -50,4 +49,16 @@ def get_position():
                     return(gps_data_to_point(data))
         except(UnicodeDecodeError):
             pass
-       
+
+def test():
+    p1 = Point(50.28838, 18.67034)
+    p2 = Point(50.28817, 18.67082)
+    p3 = Point(50.28050, 18.68766)
+    if p1.is_around(p2):
+        print("PASSED")
+    else:
+        print("FAILED")
+    if not p1.is_around(p3):
+        print("PASSED")
+    else:
+        print("FAILED")
