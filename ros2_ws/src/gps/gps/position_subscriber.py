@@ -21,11 +21,16 @@ from rclpy.node import Node
 from std_msgs.msg import String
 
 from gps.ka_utils import Point
+import gps.pointsDB
 
 class PositionSubscriber(Node):
 
     def __init__(self):
         super().__init__('position_subscriber')
+        self.anchor = "none"
+        self.publisher_ = self.create_publisher(String, 'anchor', 10)
+        timer_period = 0.5  # seconds
+        self.timer = self.create_timer(timer_period, self.timer_callback)
         self.subscription = self.create_subscription(
             String,
             'gps',
@@ -34,7 +39,18 @@ class PositionSubscriber(Node):
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):
-        self.get_logger().info('I heard: "%s"' % msg.data)
+        raw_coordinates = msg.data.split(';')
+        coordinates = Point(float(raw_coordinates[0]), float(raw_coordinates[1]))
+        for point in gps.pointsDB.getPoints(1):
+            if point.is_around(coordinates):
+                self.anchor = point.address
+                #todo nearest
+        self.get_logger().info('Position: %f; %f. Nearest anchor: %s' % (coordinates.x, coordinates.y, self.anchor))
+
+    def timer_callback(self):
+        msg = String()
+        msg.data = '%s' % (self.anchor)
+        self.publisher_.publish(msg)
 
 
 def main(args=None):

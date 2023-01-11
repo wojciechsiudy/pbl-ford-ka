@@ -20,21 +20,30 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 
-from gps.ka_utils import Point, get_position
+from uwb.uwb_utils import getAverage, getDistanceArray
 
 class PositionPublisher(Node):
 
     def __init__(self):
-        super().__init__('position_publisher')
-        self.publisher_ = self.create_publisher(String, 'gps', 10)
+        super().__init__('uwb_publisher')
+        self.publisher_ = self.create_publisher(String, 'uwbT', 10)
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.distance = 0
+        self.address = "none"
+        self.subscription = self.create_subscription(
+            String,
+            'anchor',
+            self.listener_callback,
+            10)
+    
+    def listener_callback(self, msg):
+        self.address = msg.data
 
     def timer_callback(self):
         msg = String()
-        position = Point(0, 0)
-        position = get_position()
-        msg.data = '%f;%f' % (position.x, position.y)
+        self.distance = getAverage(getDistanceArray("/dev/UWBt", self.address, 5))
+        msg.data = '%f;%f' % (self.distance)
         self.publisher_.publish(msg)
         self.get_logger().info('Publishing: "%s"' % msg.data)
 

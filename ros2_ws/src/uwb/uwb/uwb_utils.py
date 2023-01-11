@@ -1,9 +1,10 @@
 
 from serial import Serial
 
-uwb_serial = Serial("/dev/ttyUSB0", 115200)
+baudrate = 115200
 
-def getDistanceArray(address, size):
+def getDistanceArray(serialPath, address, size):
+    uwb_serial = Serial(serialPath, baudrate)
     distances = []
     message = address + str(size)
     uwb_serial.write(bytes(message, "ASCII"))
@@ -18,6 +19,8 @@ def getDistanceArray(address, size):
     return distances
 
 def getAverage(distances):
+    if len(distances) == 1:
+        return
     sum = 0
     n = 0
     for distance in distances:
@@ -28,4 +31,4 @@ def getAverage(distances):
     else:
         return (sum / n)
 
-print(getAverage(getDistanceArray("AA:BB", 100)))
+print(getAverage(getDistanceArray("/dev/UWBt", "AA:BB", 3)))
