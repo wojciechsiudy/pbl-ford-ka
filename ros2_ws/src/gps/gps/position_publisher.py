@@ -20,7 +20,6 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 
-
 from gps.ka_utils import Point, get_position
 
 class PositionPublisher(Node):
