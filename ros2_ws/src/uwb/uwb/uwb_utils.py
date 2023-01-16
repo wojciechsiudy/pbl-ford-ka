@@ -3,6 +3,8 @@ from serial import Serial
 
 baudrate = 115200
 
+#class
+
 def getDistanceArray(serialPath, address, size):
     uwb_serial = Serial(serialPath, baudrate)
     distances = []
@@ -16,6 +18,7 @@ def getDistanceArray(serialPath, address, size):
             distances.append(distance)
         except(ValueError): #in case of reciver failure
             pass
+    uwb_serial.close()
     return distances
 
 def getAverage(distances):

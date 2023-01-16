@@ -3,8 +3,8 @@ from gps.ka_utils import Point
 def getPoints(subset):
     if subset == 1:
         return [
-            Point(50.277863, 18.669865, "AA:BB"),
-            Point(50.277863, 11.669865, "DALEKI")]
+            Point(50.290138, 18.677277, "AA:BB"),
+            Point(50.289368, 18.678203, "CC:DD")]
     else:
         return None
 

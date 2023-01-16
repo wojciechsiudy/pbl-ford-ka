@@ -42,8 +42,8 @@ class PositionPublisher(Node):
 
     def timer_callback(self):
         msg = String()
-        self.distance = getAverage(getDistanceArray("/dev/UWBt", self.address, 5))
-        msg.data = '%f;%f' % (self.distance)
+        self.distance = getAverage(getDistanceArray("/dev/UWBt", self.address, 20))
+        msg.data = '%f' % (self.distance)
         self.publisher_.publish(msg)
         self.get_logger().info('Publishing: "%s"' % msg.data)
 
