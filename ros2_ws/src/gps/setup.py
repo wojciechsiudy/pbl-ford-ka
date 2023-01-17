@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'talker = gps.position_publisher:main',
             'listener = gps.position_subscriber:main',
+            'psudoTalker = gps.position_pseudo_publisher:main',
         ],
     },
 )

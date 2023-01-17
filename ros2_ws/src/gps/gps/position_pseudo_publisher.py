@@ -20,51 +20,45 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 
-from uwb.uwb_utils import UwbSerialConnection
+from gps.ka_utils import Point, get_position
 
-class UwbNode(Node):
+class PositionPublisher(Node):
 
     def __init__(self):
-        super().__init__('uwb_publisher')
-        self.publisher_ = self.create_publisher(String, 'uwbT', 10)
-        timer_period = 0.05  # seconds
+        super().__init__('position_pseudo_publisher')
+        self.publisher_ = self.create_publisher(String, 'gps', 10)
+        timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.distance = 0
-        self.address = "none"
-        self.connection = UwbSerialConnection("/dev/UWBt")
-        self.subscription = self.create_subscription(
-            String,
-            'anchor',
-            self.listener_callback,
-            10)
-        self.connection.begin()
-        self.get_logger().info("Setting up uwb publisher. No data will be logged here to keep performance.")
-    
-    def listener_callback(self, msg):
-        self.connection.set_address(msg.data)
+        self.node_first = True
+        self.node_ticks = 0
 
     def timer_callback(self):
+        self.node_ticks += 1
         msg = String()
-        #get value from serial buffer
-        self.distance = self.connection.get_distance()
-        msg.data = '%f' % (self.distance)
-        #msg.data = "quick"
+        position = Point(0, 0)
+        if self.node_first == True:
+            position = Point(50.0, 18.0)
+        else:
+            position = Point(52.0, 20.0)
+        msg.data = '%f;%f' % (position.x, position.y)
         self.publisher_.publish(msg)
-        #self.get_logger().info('Publishing: "%s"' % msg.data)
+        self.get_logger().info('Publishing: "%s"' % msg.data)
+        if (self.node_ticks == 10):
+            self.node_ticks = 0
+            self.node_first = not self.node_first
 
 
 def main(args=None):
     rclpy.init(args=args)
 
-    uwb_node = UwbNode()
+    position_publisher = PositionPublisher()
 
-    rclpy.spin(uwb_node)
+    rclpy.spin(position_publisher)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    uwb_node.connection.end()
-    uwb_node.destroy_node()
+    position_publisher.destroy_node()
     rclpy.shutdown()
 
 
