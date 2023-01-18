@@ -41,7 +41,9 @@ class UwbNode(Node):
         self.get_logger().info("Setting up uwb publisher. No data will be logged here to keep performance.")
     
     def listener_callback(self, msg):
-        self.connection.set_address(msg.data)
+        if not self.address == msg.data:
+            self.address = msg.data
+            self.connection.set_address(msg.data)
 
     def timer_callback(self):
         msg = String()

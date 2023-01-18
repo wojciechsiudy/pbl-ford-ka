@@ -1,41 +1,73 @@
 from multiprocessing import Process, Queue, Pipe
+from threading import Timer
 from serial import Serial
-import time
 
 baudrate = 115200
 MAX_FAILS = 10
 FRAMES_AMOUNT = 10
+THREAD_TIMEOUT = 1.0
 
 class UwbSerialConnection:
     def __init__(self, serial_path="/dev/UWBt") -> None:
         self.serial_path = serial_path
         self.serial = Serial()
         self.connected = False
-        self.distancesQueue = Queue()
-        self.lastValue = 0
+        self.distances_queue = Queue()
+        self.last_value = 0
         self.fails = 0
         self.address_parent, self.address_child = Pipe()
-        self.process = Process(target=self._thread_process, args=(self.distancesQueue, self.address_child,))
+        self.address = Queue()
+        self.last_address = "XX:YY"
+        self.alive_ping = Queue()
+        self.watchdog = Timer(THREAD_TIMEOUT, self._watchdog_process, args=(self.alive_ping,))
+        self.process = Process(target=self._thread_process, args=(self.distances_queue, self.address, self.alive_ping,))
 
     def begin(self):
         self._connect()
         self.process.start()
+        self.watchdog.start()
 
     def end(self):
+        self.watchdog.cancel()
         self.process.join()
         self._disconnect()
 
-    def _thread_process(self, queue, address):
+    def restart(self):
+        self.end()
+        self.begin()
+        print("RESTARTED")
+
+    #it is not working, thread process talks too quick
+    def _watchdog_process(self, ping_queue):
+        if ping_queue.qsize() > 0:
+            ping_queue.get()
+        else:
+            self.restart()
+
+
+    def _thread_process(self, queue, address, ping_queue):
+        current_address = "none"
         while True:
-            message = str(address.recv()) + str(FRAMES_AMOUNT)
-            self.serial.write(bytes(message, "ASCII"))
-            for i in range (0, FRAMES_AMOUNT):
-                line = str(self.serial.readline(), encoding="ASCII")
-                try:
-                    distance = float(line[8:].strip())
-                    queue.put(distance)
-                except(ValueError): #in case of reciver failure
-                    pass
+            print("THREAD ALIVE")
+            if current_address != "none":
+                ping_queue.put("X")
+            #kaś się tu zawiesza
+            if self.address.qsize() > 0:
+                current_address = address.get()
+                print("ADDRESS SET: ", current_address)
+            message = str(current_address) + str(FRAMES_AMOUNT)
+            if self.serial.isOpen() and current_address != "none":
+                self.serial.write(bytes(message, "ASCII"))
+                for i in range (0, FRAMES_AMOUNT):
+                    line = str(self.serial.readline(), encoding="ASCII")
+                    try:
+                        distance = float(line[8:].strip())
+                        print("I: ", i, "DISTANCE: ", distance)
+                        queue.put(distance)
+                    except(ValueError): #in case of reciver failure
+                        pass
+            else:
+                self.reconnect()
 
             
                 
@@ -63,18 +95,22 @@ class UwbSerialConnection:
     def _dummy_thread_function(self):
         MAX_PUT = 3
         while (MAX_PUT > 0):
-            self.distancesQueue.put("HI")
+            self.distances_queue.put("HI")
             time.sleep(1)
             MAX_PUT -= 1
 
     # this method creates interface between ROS2 and serial connection
     def get_distance(self):
-        if self.distancesQueue.qsize() > 0:
-            self.lastValue = self.distancesQueue.get()
-        return self.lastValue
+        if self.distances_queue.qsize() > 0:
+            self.last_value = self.distances_queue.get()
+        return self.last_value
     
     def set_address(self, _address):
         self.address_parent.send(_address)
+        if _address != self.last_address:
+            self.last_address = _address
+            self.address.put(self.last_address)
+        print("SET_ADRESSS_CALLED: ", _address)
 
     
 
