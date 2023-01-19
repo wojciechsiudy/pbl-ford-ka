@@ -1,11 +1,12 @@
 from multiprocessing import Process, Queue, Pipe
 from threading import Timer
 from serial import Serial
+from time import sleep
 
 baudrate = 115200
 MAX_FAILS = 10
 FRAMES_AMOUNT = 10
-THREAD_TIMEOUT = 1.0
+THREAD_TIMEOUT = 0.05
 
 class UwbSerialConnection:
     def __init__(self, serial_path="/dev/UWBt") -> None:
@@ -19,7 +20,7 @@ class UwbSerialConnection:
         self.address = Queue()
         self.last_address = "XX:YY"
         self.alive_ping = Queue()
-        self.watchdog = Timer(THREAD_TIMEOUT, self._watchdog_process, args=(self.alive_ping,))
+        self.watchdog = Process(target=self._watchdog_process, args=(self.alive_ping,))
         self.process = Process(target=self._thread_process, args=(self.distances_queue, self.address, self.alive_ping,))
 
     def begin(self):
@@ -28,7 +29,7 @@ class UwbSerialConnection:
         self.watchdog.start()
 
     def end(self):
-        self.watchdog.cancel()
+        self.watchdog.join()
         self.process.join()
         self._disconnect()
 
@@ -37,21 +38,24 @@ class UwbSerialConnection:
         self.begin()
         print("RESTARTED")
 
-    #it is not working, thread process talks too quick
+    
     def _watchdog_process(self, ping_queue):
-        if ping_queue.qsize() > 0:
-            ping_queue.get()
-        else:
-            self.restart()
+        while True:
+            #print("WATCHDOG PING")
+            if ping_queue.qsize() > MAX_FAILS:
+                self.restart()
+            sleep(THREAD_TIMEOUT)
 
 
     def _thread_process(self, queue, address, ping_queue):
         current_address = "none"
         while True:
             print("THREAD ALIVE")
+            if (ping_queue.qsize() > 0):
+                ping_queue.get("X")
             if current_address != "none":
-                ping_queue.put("X")
-            #kaś się tu zawiesza
+                pass
+            #kajś się tu zawiesza
             if self.address.qsize() > 0:
                 current_address = address.get()
                 print("ADDRESS SET: ", current_address)
@@ -68,6 +72,7 @@ class UwbSerialConnection:
                         pass
             else:
                 self.reconnect()
+            sleep(THREAD_TIMEOUT)
 
             
                 
@@ -111,6 +116,7 @@ class UwbSerialConnection:
             self.last_address = _address
             self.address.put(self.last_address)
         print("SET_ADRESSS_CALLED: ", _address)
+        self.alive_ping.put("X")
 
     
 
