@@ -17,8 +17,8 @@
 
 import rclpy
 from rclpy.node import Node
-
-from std_msgs.msg import String
+from builtins import float
+from std_msgs.msg import String, Float32
 
 from uwb.uwb_utils import UwbSerialConnection
 
@@ -26,10 +26,9 @@ class UwbNode(Node):
 
     def __init__(self):
         super().__init__('uwb_publisher')
-        self.publisher_ = self.create_publisher(String, 'uwbT', 10)
-        timer_period = 0.0005  # seconds
+        self.publisher_ = self.create_publisher(Float32, 'uwbT', 10)
+        timer_period = 0.05  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.distance = 0
         self.address = "none"
         self.connection = UwbSerialConnection("/dev/UWBt")
         self.subscription = self.create_subscription(
@@ -46,12 +45,11 @@ class UwbNode(Node):
             self.connection.set_address(msg.data)
 
     def timer_callback(self):
-        msg = String()
+        distance = Float32()
         #get value from serial buffer
-        self.distance = self.connection.get_distance()
-        msg.data = '%f' % (self.distance)
+        distance.data = float(self.connection.get_distance())
         #msg.data = "quick"
-        self.publisher_.publish(msg)
+        self.publisher_.publish(distance)
         #self.get_logger().info('Publishing: "%s"' % msg.data)
 
 

@@ -1,10 +1,10 @@
-from multiprocessing import Process, Queue, Pipe
-from threading import Timer
-from serial import Serial
+from multiprocessing import Queue
+from threading import Thread
+from serial import Serial, SerialException
 from time import sleep
 
 baudrate = 115200
-MAX_FAILS = 10
+MAX_FAILS = 1
 FRAMES_AMOUNT = 10
 THREAD_TIMEOUT = 0.05
 
@@ -16,22 +16,25 @@ class UwbSerialConnection:
         self.distances_queue = Queue()
         self.last_value = 0
         self.fails = 0
-        self.address_parent, self.address_child = Pipe()
-        self.address = Queue()
+        self.address_queue = Queue()
         self.last_address = "XX:YY"
         self.alive_ping = Queue()
-        self.watchdog = Process(target=self._watchdog_process, args=(self.alive_ping,))
-        self.process = Process(target=self._thread_process, args=(self.distances_queue, self.address, self.alive_ping,))
+        self._set_threads()
+        
+
 
     def begin(self):
         self._connect()
         self.process.start()
         self.watchdog.start()
 
+    def _set_threads(self):
+        self.watchdog = Thread(target=self._watchdog_process, args=(self.alive_ping,))
+        self.process = Thread(target=self._thread_process, args=(self.distances_queue, self.address_queue, self.alive_ping,))
+
     def end(self):
-        self.watchdog.join()
-        self.process.join()
         self._disconnect()
+        self._set_threads()
 
     def restart(self):
         self.end()
@@ -44,6 +47,7 @@ class UwbSerialConnection:
             #print("WATCHDOG PING")
             if ping_queue.qsize() > MAX_FAILS:
                 self.restart()
+                return
             sleep(THREAD_TIMEOUT)
 
 
@@ -53,26 +57,28 @@ class UwbSerialConnection:
             print("THREAD ALIVE")
             if (ping_queue.qsize() > 0):
                 ping_queue.get("X")
-            if current_address != "none":
-                pass
             #kajś się tu zawiesza
-            if self.address.qsize() > 0:
+            if self.address_queue.qsize() > 0:
                 current_address = address.get()
                 print("ADDRESS SET: ", current_address)
             message = str(current_address) + str(FRAMES_AMOUNT)
             if self.serial.isOpen() and current_address != "none":
                 self.serial.write(bytes(message, "ASCII"))
-                for i in range (0, FRAMES_AMOUNT):
-                    line = str(self.serial.readline(), encoding="ASCII")
-                    try:
-                        distance = float(line[8:].strip())
-                        print("I: ", i, "DISTANCE: ", distance)
-                        queue.put(distance)
-                    except(ValueError): #in case of reciver failure
-                        pass
+                try:
+                    for i in range (0, FRAMES_AMOUNT):
+                        line = str(self.serial.readline(), encoding="ASCII")
+                        try:
+                            distance = float(line[8:].strip())
+                            print("I: ", i, "DISTANCE: ", distance)
+                            queue.put(distance)
+                        except(ValueError): #in case of reciver failure
+                            pass
+                except(TypeError, SerialException, OSError):
+                    print("SERIAL FAILURE")
+                    return
             else:
                 self.reconnect()
-            sleep(THREAD_TIMEOUT)
+            sleep(THREAD_TIMEOUT / 2)
 
             
                 
@@ -111,10 +117,9 @@ class UwbSerialConnection:
         return self.last_value
     
     def set_address(self, _address):
-        self.address_parent.send(_address)
         if _address != self.last_address:
             self.last_address = _address
-            self.address.put(self.last_address)
+            self.address_queue.put(self.last_address)
         print("SET_ADRESSS_CALLED: ", _address)
         self.alive_ping.put("X")
 
