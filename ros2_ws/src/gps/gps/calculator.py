@@ -19,7 +19,7 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import String
-from uwb_interfaces.msg import Point as Point_msg
+from uwb_interfaces.msg import Point as Point_msg, UwbMessage
 
 from gps.ka_utils import Point
 import gps.pointsDB
@@ -27,28 +27,33 @@ import gps.pointsDB
 class PositionSubscriber(Node):
 
     def __init__(self):
-        super().__init__('position_subscriber')
+        super().__init__('calculator')
         self.anchor = Point(0.0, 0.0, "none")
-        self.publisher_ = self.create_publisher(Point_msg, 'anchor', 10)
-        timer_period = 0.1  # seconds
+        self.publisher_ = self.create_publisher(Point_msg, 'calculated_position', 10)
+        timer_period = 0.05  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.subscription = self.create_subscription(
+        self.anchor = Point()
+        self.distance_l, self.distance_r, self.distance_t = 0.0
+        self.anchor_subscription = self.create_subscription(
             Point_msg,
-            'gps',
-            self.listener_callback,
+            'anchor',
+            self.anchor_callback,
             10)
-        self.subscription  # prevent unused variable warning
+        self.anchor_subscription  # prevent unused variable warning
+        self.uwb_subscription = self.create_subscription(
+            UwbMessage,
+            'uwb',
+            self.uwb_callback,
+            10)
+        self.uwb_subscription  # prevent unused variable warning
 
-    def listener_callback(self, msg):
-        coordinates = Point(msg.x, msg.y)
-        nearest_point = Point(0.0, 0.0, "none")
-        nearest_distance = float('inf')
-        for point in gps.pointsDB.getPoints(1):
-            if point.is_around(coordinates):
-                if coordinates.get_distance_to(point) < nearest_distance:
-                    nearest_point = point
-        self.anchor = nearest_point
-        self.get_logger().info('Position: %f; %f. Nearest anchor: %s' % (coordinates.x, coordinates.y, self.anchor.address))
+    def anchor_callback(self, msg):
+        self.anchor = Point(msg.x, msg.y, msg.z, msg.address)
+        
+    def uwb_callback(self, msg):
+        self.distance_l = msg.l
+        self.distance_r = msg.r
+        self.distance_t = msg.t
 
     def timer_callback(self):
         msg = Point_msg()
@@ -56,7 +61,6 @@ class PositionSubscriber(Node):
         msg.y = self.anchor.y
         msg.address = self.anchor.address
         self.publisher_.publish(msg)
-
 
 def main(args=None):
     rclpy.init(args=args)
@@ -70,7 +74,6 @@ def main(args=None):
     # when the garbage collector destroys the node object)
     position_subscriber.destroy_node()
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()

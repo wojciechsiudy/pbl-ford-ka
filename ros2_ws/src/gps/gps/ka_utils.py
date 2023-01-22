@@ -11,13 +11,16 @@ class Point:
         self.is_observed = False
 
     def is_around(self, another):
-        distanceDEG = math.acos((math.sin(another.x) * math.sin(self.x)) + (math.cos(another.x) * math.cos(self.x) * math.cos(abs(another.y - self.y))) )
-        distanceNM = distanceDEG * 60
-        distance = distanceNM * 1852
+        distance = self.get_distance_to(another)
         if (distance > POSITION_RADIUS_M):
             return False
         else:
             return True
+        
+    def get_distance_to(self, another):
+        distanceDEG = math.acos((math.sin(another.x) * math.sin(self.x)) + (math.cos(another.x) * math.cos(self.x) * math.cos(abs(another.y - self.y))) )
+        distanceNM = distanceDEG * 60
+        return distanceNM * 1852
 
 def gps_data_to_point(data):
     lat_raw = data[2]

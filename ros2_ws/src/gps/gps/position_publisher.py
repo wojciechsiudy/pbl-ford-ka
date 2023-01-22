@@ -19,6 +19,7 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import String
+from uwb_interfaces.msg import Point as Point_msg
 
 from gps.ka_utils import Point, get_position
 
@@ -26,17 +27,18 @@ class PositionPublisher(Node):
 
     def __init__(self):
         super().__init__('position_publisher')
-        self.publisher_ = self.create_publisher(String, 'gps', 10)
-        timer_period = 0.5  # seconds
+        self.publisher_ = self.create_publisher(Point_msg, 'gps', 10)
+        timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
     def timer_callback(self):
-        msg = String()
+        msg = Point_msg()
         position = Point(0, 0)
         position = get_position()
-        msg.data = '%f;%f' % (position.x, position.y)
+        msg.x = position.x
+        msg.y = position.y
         self.publisher_.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.data)
+        #self.get_logger().info('Publishing: "%s"' % msg.data)
 
 
 def main(args=None):

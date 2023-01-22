@@ -8,6 +8,8 @@ MAX_FAILS = 1
 FRAMES_AMOUNT = 10
 THREAD_TIMEOUT = 0.05
 
+DEBUG = False
+
 class UwbSerialConnection:
     def __init__(self, serial_path="/dev/UWBt") -> None:
         self.serial_path = serial_path
@@ -39,7 +41,8 @@ class UwbSerialConnection:
     def restart(self):
         self.end()
         self.begin()
-        print("RESTARTED")
+        if DEBUG == True:
+            print("RESTARTED")
 
     
     def _watchdog_process(self, ping_queue):
@@ -54,27 +57,31 @@ class UwbSerialConnection:
     def _thread_process(self, queue, address, ping_queue):
         current_address = "none"
         while True:
-            print("THREAD ALIVE")
+            if DEBUG == True:
+                print("THREAD ALIVE")
             if (ping_queue.qsize() > 0):
                 ping_queue.get("X")
             #kajś się tu zawiesza
             if self.address_queue.qsize() > 0:
                 current_address = address.get()
-                print("ADDRESS SET: ", current_address)
+                if DEBUG == True:
+                    print("ADDRESS SET: ", current_address)
             message = str(current_address) + str(FRAMES_AMOUNT)
             if self.serial.isOpen() and current_address != "none":
-                self.serial.write(bytes(message, "ASCII"))
                 try:
+                    self.serial.write(bytes(message, "ASCII"))
                     for i in range (0, FRAMES_AMOUNT):
                         line = str(self.serial.readline(), encoding="ASCII")
                         try:
                             distance = float(line[8:].strip())
-                            print("I: ", i, "DISTANCE: ", distance)
+                            if DEBUG == True:    
+                                print("I: ", i, "DISTANCE: ", distance)
                             queue.put(distance)
                         except(ValueError): #in case of reciver failure
                             pass
                 except(TypeError, SerialException, OSError):
-                    print("SERIAL FAILURE")
+                    if DEBUG == True:
+                        print("SERIAL FAILURE")
                     return
             else:
                 self.reconnect()
@@ -120,7 +127,8 @@ class UwbSerialConnection:
         if _address != self.last_address:
             self.last_address = _address
             self.address_queue.put(self.last_address)
-        print("SET_ADRESSS_CALLED: ", _address)
+            if DEBUG == True:
+                print("SET_ADRESSS_CALLED: ", _address)
         self.alive_ping.put("X")
 
     
