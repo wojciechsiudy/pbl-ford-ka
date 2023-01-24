@@ -24,6 +24,7 @@ from uwb_interfaces.msg import Point as Point_msg, UwbMessage
 from gps.ka_utils import Point
 import gps.pointsDB
 
+
 class PositionSubscriber(Node):
 
     def __init__(self):
@@ -49,7 +50,7 @@ class PositionSubscriber(Node):
 
     def anchor_callback(self, msg):
         self.anchor = Point(msg.x, msg.y, msg.z, msg.address)
-        
+
     def uwb_callback(self, msg):
         self.distance_l = msg.l
         self.distance_r = msg.r
@@ -61,6 +62,7 @@ class PositionSubscriber(Node):
         msg.y = self.anchor.y
         msg.address = self.anchor.address
         self.publisher_.publish(msg)
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -74,6 +76,7 @@ def main(args=None):
     # when the garbage collector destroys the node object)
     position_subscriber.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

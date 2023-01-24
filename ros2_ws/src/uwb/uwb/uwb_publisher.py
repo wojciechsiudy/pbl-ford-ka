@@ -18,10 +18,10 @@
 import rclpy
 from rclpy.node import Node
 from builtins import float
-from std_msgs.msg import String, Float32
-from uwb_interfaces.msg import UwbMessage, Point
+from uwb_interfaces.msg import UwbMessage, Point, PointPair
 
 from uwb.uwb_utils import UwbSerialConnection
+
 
 class UwbNode(Node):
 
@@ -33,13 +33,15 @@ class UwbNode(Node):
         self.address = "none"
         self.connection_t = UwbSerialConnection("/dev/UWBt")
         self.subscription = self.create_subscription(
-            Point,
-            'anchor',
+            PointPair,
+            'anchors',
             self.listener_callback,
             10)
         self.connection_t.begin()
-        self.get_logger().info("Setting up uwb publisher. No data will be logged here to keep performance. If you want to see data in concole toogle 'DEBUG' value in uwb_utils.py to True.")
-    
+        self.get_logger().info(
+            "Setting up uwb publisher. No data will be logged here to keep performance. If you want to see data in "
+            "console toggle 'DEBUG' value in uwb_utils.py to True.")
+
     def listener_callback(self, msg):
         if not self.address == msg.address:
             self.address = msg.address
@@ -51,7 +53,8 @@ class UwbNode(Node):
         distances.l = 1.0
         distances.r = 1.0
         self.publisher_.publish(distances)
-        #self.get_logger().info('Publishing: "%s"' % msg.data)
+        # self.get_logger().info('Publishing: "%s"' % msg.data)
+
 
 def main(args=None):
     rclpy.init(args=args)

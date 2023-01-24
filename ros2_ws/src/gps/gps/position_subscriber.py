@@ -19,17 +19,20 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import String
+from uwb_interfaces.msg import PointPair
 from uwb_interfaces.msg import Point as Point_msg
 
 from gps.ka_utils import Point
 import gps.pointsDB
+
 
 class PositionSubscriber(Node):
 
     def __init__(self):
         super().__init__('position_subscriber')
         self.anchor = Point(0.0, 0.0, "none")
-        self.publisher_ = self.create_publisher(Point_msg, 'anchor', 10)
+        self.anchor_second = Point(0.0, 0.0, "none")
+        self.publisher_ = self.create_publisher(PointPair, 'anchors', 10)
         timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.subscription = self.create_subscription(
@@ -41,21 +44,30 @@ class PositionSubscriber(Node):
 
     def listener_callback(self, msg):
         coordinates = Point(msg.x, msg.y)
-        nearest_point = Point(0.0, 0.0, "none")
-        nearest_distance = float('inf')
+        points_around = []
         for point in gps.pointsDB.getPoints(1):
-            if point.is_around(coordinates):
-                if coordinates.get_distance_to(point) < nearest_distance:
-                    nearest_point = point
-        self.anchor = nearest_point
-        self.get_logger().info('Position: %f; %f. Nearest anchor: %s' % (coordinates.x, coordinates.y, self.anchor.address))
+            distance = coordinates.get_distance_to(point)
+            if distance < float('inf'):
+                points_around.append((point, coordinates.get_distance_to(point)))
+        points_around.sort(key=lambda x: x[1])
+        self.anchor = points_around.pop()[0]
+        self.anchor_second = points_around.pop()[0]
+        #self.get_logger().info(
+        #    'Position: %f; %f. Nearest anchor: %s' % (coordinates.x, coordinates.y, self.anchor.address))
 
     def timer_callback(self):
-        msg = Point_msg()
-        msg.x = self.anchor.x
-        msg.y = self.anchor.y
-        msg.address = self.anchor.address
+        msg = PointPair()
+        msg.nearest = create_point_msg(self.anchor.x, self.anchor.y, self.anchor.address)
+        msg.second = create_point_msg(self.anchor_second.x, self.anchor_second.y, self.anchor_second.address)
         self.publisher_.publish(msg)
+
+
+def create_point_msg(x_val, y_val, address_val):
+    msg = Point_msg()
+    msg.x = x_val
+    msg.y = y_val
+    msg.address = address_val
+    return msg
 
 
 def main(args=None):

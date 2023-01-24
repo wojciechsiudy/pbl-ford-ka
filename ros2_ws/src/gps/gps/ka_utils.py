@@ -1,7 +1,7 @@
 import math
 from serial import Serial
 
-POSITION_RADIUS_M = 50
+POSITION_RADIUS_M = float('inf')
 
 class Point:
     def __init__(self, x, y, address="TAG"):
