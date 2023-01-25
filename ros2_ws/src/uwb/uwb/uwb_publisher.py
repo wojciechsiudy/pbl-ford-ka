@@ -30,28 +30,39 @@ class UwbNode(Node):
         self.publisher_ = self.create_publisher(UwbMessage, 'uwb', 10)
         timer_period = 0.05  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.address = "none"
-        self.connection_t = UwbSerialConnection("/dev/UWBt")
+        self.address_nearest = "none"
+        self.address_second = "none"
+        self.connection_l = UwbSerialConnection("/dev/UWBl")
+        self.connection_r = UwbSerialConnection("/dev/UWBr")
         self.subscription = self.create_subscription(
             PointPair,
             'anchors',
             self.listener_callback,
             10)
-        self.connection_t.begin()
+        self.connection_l.begin()
+        self.connection_r.begin()
         self.get_logger().info(
             "Setting up uwb publisher. No data will be logged here to keep performance. If you want to see data in "
             "console toggle 'DEBUG' value in uwb_utils.py to True.")
 
     def listener_callback(self, msg):
-        if not self.address == msg.address:
-            self.address = msg.address
-            self.connection_t.set_address(self.address)
+        changed = False
+        if not self.address_nearest == msg.nearest.address:
+            self.address_nearest = msg.nearest.address
+            changed = True
+        if not self.address_second == msg.second.address:
+            self.address_second = msg.second.address
+            changed = True
+        if changed:
+            self.connection_l.set_address(self.address_nearest)
+            self.connection_r.set_address(self.address_second)
+
 
     def timer_callback(self):
         distances = UwbMessage()
-        distances.t = float(self.connection_t.get_distance())
-        distances.l = 1.0
-        distances.r = 1.0
+        distances.l = float(self.connection_l.get_distance())
+        distances.r = float(self.connection_r.get_distance())
+        distances.t = 1.0
         self.publisher_.publish(distances)
         # self.get_logger().info('Publishing: "%s"' % msg.data)
 
@@ -66,7 +77,8 @@ def main(args=None):
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    uwb_node.connection_t.end()
+    uwb_node.connection_l.end()
+    uwb_node.connection_r.end()
     uwb_node.destroy_node()
     rclpy.shutdown()
 

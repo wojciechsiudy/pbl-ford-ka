@@ -6,9 +6,9 @@ from time import sleep
 BAUDRATE = 115200
 MAX_FAILS = 1
 FRAMES_AMOUNT = 10
-THREAD_TIMEOUT = 0.05
+THREAD_TIMEOUT = 0.6
 
-DEBUG = False
+DEBUG = True
 
 
 class UwbSerialConnection:
@@ -20,7 +20,7 @@ class UwbSerialConnection:
         self.last_value = 0
         self.fails = 0
         self.address_queue = Queue()
-        self.last_address = "XX:YY"
+        self.last_address = "none"
         self.alive_ping = Queue()
         self._set_threads()
 
@@ -46,20 +46,18 @@ class UwbSerialConnection:
 
     def _watchdog_process(self, ping_queue):
         while True:
-            # print("WATCHDOG PING")
             if ping_queue.qsize() > MAX_FAILS:
                 self.restart()
                 return
             sleep(THREAD_TIMEOUT)
 
     def _thread_process(self, queue, address, ping_queue):
-        current_address = "none"
+        current_address = self.last_address
         while True:
             if DEBUG is True:
-                print("THREAD ALIVE")
+                print("THREAD ", self.serial_path, " ALIVE, address set: ", current_address)
             if ping_queue.qsize() > 0:
                 ping_queue.get("X")
-            # kajś się tu zawiesza
             if self.address_queue.qsize() > 0:
                 current_address = address.get()
                 if DEBUG:
@@ -67,11 +65,20 @@ class UwbSerialConnection:
             message = str(current_address) + str(FRAMES_AMOUNT)
             if self.serial.isOpen() and current_address != "none":
                 try:
+                    if self.serial_path == "/dev/UWBl":
+                        sleep(0.007)
+                        if DEBUG:
+                            print("SMALL SLEEP")
+                    elif self.serial_path == "/dev/UWBr":
+                        sleep(0.053)
+                        if DEBUG:
+                            print("DEEP SLEEP")
+                    #begin communication
                     self.serial.write(bytes(message, "ASCII"))
                     for i in range(0, FRAMES_AMOUNT):
                         line = str(self.serial.readline(), encoding="ASCII")
                         try:
-                            distance = float(line[8:].strip())
+                            distance = float(line[10:].strip())
                             if DEBUG:
                                 print("I: ", i, "DISTANCE: ", distance)
                             queue.put(distance)
@@ -83,7 +90,7 @@ class UwbSerialConnection:
                     return
             else:
                 self.reconnect()
-            sleep(THREAD_TIMEOUT / 2)
+            sleep(THREAD_TIMEOUT)
 
     def _connect(self):
         self.serial = Serial(self.serial_path, BAUDRATE)
