@@ -37,6 +37,7 @@ class PositionPublisher(Node):
         position = get_position()
         msg.x = position.x
         msg.y = position.y
+        print(position.x, position.y)
         self.publisher_.publish(msg)
         #self.get_logger().info('Publishing: "%s"' % msg.data)
 

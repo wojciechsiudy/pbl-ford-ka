@@ -47,13 +47,17 @@ class PositionSubscriber(Node):
         points_around = []
         for point in gps.pointsDB.getPoints(1):
             distance = coordinates.get_distance_to(point)
+            print(point.address, distance)
             if distance < float('inf'):
                 points_around.append((point, coordinates.get_distance_to(point)))
         points_around.sort(key=lambda x: x[1])
-        self.anchor = points_around.pop()[0]
-        self.anchor_second = points_around.pop()[0]
-        #self.get_logger().info(
-        #    'Position: %f; %f. Nearest anchor: %s' % (coordinates.x, coordinates.y, self.anchor.address))
+        for tpl in points_around:
+            print("SORT TEST", tpl[0].address, tpl[1])
+
+        self.anchor = points_around[0][0]
+        self.anchor_second = points_around[1][0]
+        self.get_logger().info(
+            'Position: %f; %f. Nearest anchor: %s' % (coordinates.x, coordinates.y, self.anchor.address))
 
     def timer_callback(self):
         msg = PointPair()

@@ -46,7 +46,7 @@ class PositionPublisher(Node):
         msg.x = position.x
         msg.y = position.y
         self.publisher_.publish(msg)
-        #self.get_logger().info('Publishing: "%s"' % msg.data)
+        #self.get_logger().info('Publishing: "%f, %f"' % (msg.x, msg.y))
         if (self.node_ticks == 50):
             self.node_ticks = 0
             self.node_first = not self.node_first
