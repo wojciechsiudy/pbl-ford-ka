@@ -22,10 +22,15 @@ class AhrsSubscriber(Node):
 
     def __init__(self):
         super().__init__('ahrs_subscriber')
+        super().__init__('ahrs_magn')
+        super().__init__('ahrs_gyro')
+        super().__init__('ahrs_accel')
         self.subscription_magn = self.create_subscription(String, 'ahrs_magn', self.listener_callback, 10)
         self.subscription_gyro = self.create_subscription(String, 'ahrs_gyro', self.listener_callback, 10)
         self.subscription_accel = self.create_subscription(String, 'ahrs_accel', self.listener_callback, 10)
-        self.subscription  # prevent unused variable warning
+        self.subscription_magn  # prevent unused variable warning
+        self.subscription_gyro  # prevent unused variable warning
+        self.subscription_accel  # prevent unused variable warning
 
     def listener_callback(self, msg):
         self.get_logger().info('I heard: "%s"' % msg.data)

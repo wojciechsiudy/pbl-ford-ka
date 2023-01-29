@@ -1,28 +1,65 @@
 import math
 from serial import Serial
-
-class MeasureValue:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
+from multiprocessing import Queue
+from threading import Thread
+from time import sleep
+from std_msgs.msg import Float32
+from ahrs_interface.msg import MeasureValue, Measure
+      
         
-class Measure:
-	def __init__(self, magn, gyro, accel):
-		self.magn = magn
-		self.gyro = gyro
-		self.accel = accel
+class AhrsConnection:
+    def __init__(self, serial_path="/dev/ttyS1"): 
+        self.ahrs_serial = Serial(serial_path, 115200)
+        self.measures_queue = Queue()
+        self.last_value = Measure()
+        self._set_threads()
+        
+    def begin(self):
+        self.process.start()
+        
+    def _set_threads(self):
+        self.process = Thread(target=self._thread_process, args=(self.measures_queue,))
+        
+    def _thread_process(self, queue):
+        while True:
+            try:
+                line = str(self.ahrs_serial.readline(), encoding="ASCII")
+                if "AHRS" in line:
+                    data = line.split(';')
+                    queue.put(self.ahrs_data_to_point(data))
+            except:
+                print("readErr")
 
-def ahrs_data_to_point(data):
-	return Measure(MeasureValue(data[1],data[2],data[3]), MeasureValue(data[4],data[5],data[6]), MeasureValue(data[7],data[8],data[9])) #todo
-
-def get_data():
-    ahrs_serial = Serial("/dev/ttyS1", 115200) #
-    while (True):
+    def end(self):
+        self._set_threads()
+        
+        
+    def getLastValue(self):
+        if self.measures_queue.qsize() > 0:
+            self.last_value = self.measures_queue.get()
+        return self.last_value
+        
+    def ahrs_data_to_point(self, data):
+        a = MeasureValue()
+        g = MeasureValue()
+        m = MeasureValue()
+        measure = Measure()
         try:
-            line = str(ahrs_serial.readline(), encoding="ASCII")
-            if "AHRS" in line:
-                data = line.split(';')
-                return ahrs_data_to_point(data)
-        except(UnicodeDecodeError):
-            pass
+            m.x = float(data[1])
+            m.y = float(data[2])
+            m.z = float(data[3])
+            g.x = float(data[4])
+            g.y = float(data[5])
+            g.z = float(data[6])
+            a.x = float(data[7])
+            a.y = float(data[8])
+            a.z = float(data[9])
+            measure.magn = m
+            measure.gyro = g
+            measure.accel = a
+        except:
+            pass    
+        return measure         
+
+
+
