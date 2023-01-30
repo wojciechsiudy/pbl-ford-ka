@@ -18,9 +18,46 @@ class Point:
             return True
         
     def get_distance_to(self, another):
-        distanceDEG = math.acos((math.sin(another.x) * math.sin(self.x)) + (math.cos(another.x) * math.cos(self.x) * math.cos(abs(another.y - self.y))) )
-        distanceNM = distanceDEG * 60
-        return distanceNM * 1852
+        lat_1 = self.y
+        lng_1 = self.x
+        lat_2 = another.y
+        lng_2 = another.x
+        lng_1, lat_1, lng_2, lat_2 = map(math.radians, [lng_1, lat_1, lng_2, lat_2])
+        d_lat = lat_2 - lat_1
+        d_lng = lng_2 - lng_1
+        temp = (
+                math.sin(d_lat / 2) ** 2
+                + math.cos(lat_1)
+                * math.cos(lat_2)
+                * math.sin(d_lng / 2) ** 2
+        )
+        return 1000 * 6373.0 * (2 * math.atan2(math.sqrt(temp), math.sqrt(1 - temp)))
+
+
+from geopy.distance import geodesic
+def calculate_position(anchor_A, anchor_B, ctrl_anchor, distance_a, distance_b): #anchor_A ze współrzędnymi "(0,0)", distance_a/b od anchorów
+    try:
+        #c = anchor_A.get_distance_to(anchor_B) #odległośc między anchorami
+        pa = (anchor_A.x, anchor_A.y)
+        pb = (anchor_B.x, anchor_B.y)
+        c = geodesic(pa, pb).m
+        print("C:", c)
+        cos_a = (pow(distance_b,2) + pow(c,2) - pow(distance_a,2)) / abs(2 * distance_b * c)
+        print("COS_A:",cos_a)
+        tempx = float(((distance_b * cos_a)/1852)/60)
+        tempy = float(((distance_b * math.sqrt(1 - cos_a * cos_a)) / 1852) /60)
+        print("tempx:", tempx, "tempy:", tempy)
+        if(anchor_A.x>ctrl_anchor.x):
+            x=anchor_A.x-tempx
+        else:
+            x=anchor_A.x+tempx
+        if(anchor_A.y>ctrl_anchor.y):
+            y=anchor_A.y-tempy
+        else:
+            y=anchor_A.y+tempy
+    except (ZeroDivisionError, ValueError):
+        return Point(0.0, 0.0)
+    return Point(x, y)
 
 def gps_data_to_point(data):
     lat_raw = data[2]

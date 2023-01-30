@@ -19,28 +19,37 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import String
-from uwb_interfaces.msg import Point as Point_msg, UwbMessage
+from uwb_interfaces.msg import Point as Point_msg, PointPair, UwbMessage
 
-from gps.ka_utils import Point
+from gps.ka_utils import Point, calculate_position
 import gps.pointsDB
 
 
-class PositionSubscriber(Node):
+class PositionCalculator(Node):
 
     def __init__(self):
         super().__init__('calculator')
-        self.anchor = Point(0.0, 0.0, "none")
+        self.distance_l = 0.0
+        self.distance_r = 0.0
+        self.distance_p = 0.0
         self.publisher_ = self.create_publisher(Point_msg, 'calculated_position', 10)
         timer_period = 0.05  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.anchor = Point()
-        self.distance_l, self.distance_r, self.distance_t = 0.0
-        self.anchor_subscription = self.create_subscription(
+        self.anchor_A = Point(0.0, 0.0)
+        self.anchor_B = Point(0.0, 0.0)
+        self.gps_position = Point(0.0, 0.0)
+        self.gps_position = self.create_subscription(
             Point_msg,
-            'anchor',
-            self.anchor_callback,
+            'gps',
+            self.gps_callback,
+            10
+        )
+        self.anchors_subscription = self.create_subscription(
+            PointPair,
+            'anchors',
+            self.anchors_callback,
             10)
-        self.anchor_subscription  # prevent unused variable warning
+        self.anchors_subscription  # prevent unused variable warning
         self.uwb_subscription = self.create_subscription(
             UwbMessage,
             'uwb',
@@ -48,8 +57,12 @@ class PositionSubscriber(Node):
             10)
         self.uwb_subscription  # prevent unused variable warning
 
-    def anchor_callback(self, msg):
-        self.anchor = Point(msg.x, msg.y, msg.z, msg.address)
+    def gps_callback(self, msg):
+        self.gps_position = read_point_from_message(msg)
+
+    def anchors_callback(self, msg):
+        self.anchor_A = read_point_from_message(msg.nearest)
+        self.anchor_B = read_point_from_message(msg.second)
 
     def uwb_callback(self, msg):
         self.distance_l = msg.l
@@ -57,17 +70,23 @@ class PositionSubscriber(Node):
         self.distance_t = msg.t
 
     def timer_callback(self):
+        position = calculate_position(self.anchor_A, self.anchor_B, self.gps_position, self.distance_l, self.distance_r)
+        print("CALCULATED POSITION:", position.x, position.y)
         msg = Point_msg()
-        msg.x = self.anchor.x
-        msg.y = self.anchor.y
-        msg.address = self.anchor.address
+        msg.x = position.x
+        msg.y = position.y
+        msg.address = "tag"
         self.publisher_.publish(msg)
+
+
+def read_point_from_message(point_msg):
+    return Point(point_msg.x, point_msg.y, point_msg.address)
 
 
 def main(args=None):
     rclpy.init(args=args)
 
-    position_subscriber = PositionSubscriber()
+    position_subscriber = PositionCalculator()
 
     rclpy.spin(position_subscriber)
 
