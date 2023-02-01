@@ -2,6 +2,7 @@ import math
 from serial import Serial
 
 POSITION_RADIUS_M = float('inf')
+MAX_UWB_OFFSET_FACTOR = 1.15
 
 class Point:
     def __init__(self, x, y, address="TAG"):
@@ -41,20 +42,25 @@ def calculate_position(anchor_A, anchor_B, ctrl_anchor, distance_a, distance_b):
         pa = (anchor_A.x, anchor_A.y)
         pb = (anchor_B.x, anchor_B.y)
         c = geodesic(pa, pb).m
+        scale_offset_factor = 1.0
+        while (distance_a + distance_b < c and scale_offset_factor < MAX_UWB_OFFSET_FACTOR):
+            scale_offset_factor += 1.005
+            distance_a *= scale_offset_factor
+            distance_b *= scale_offset_factor
         print("C:", c)
         cos_a = (pow(distance_b,2) + pow(c,2) - pow(distance_a,2)) / abs(2 * distance_b * c)
         print("COS_A:",cos_a)
-        tempx = float(((distance_b * cos_a)/1852)/60)
-        tempy = float(((distance_b * math.sqrt(1 - cos_a * cos_a)) / 1852) /60)
+        tempx = float(((distance_b * cos_a) /1852) /60)
+        tempy = float(((distance_b * math.sqrt(1 - cos_a * cos_a)) / 1852) / 60)
         print("tempx:", tempx, "tempy:", tempy)
-        if(anchor_A.x>ctrl_anchor.x):
-            x=anchor_A.x-tempx
+        if anchor_A.x > ctrl_anchor.x:
+            x = anchor_A.x - tempx
         else:
-            x=anchor_A.x+tempx
-        if(anchor_A.y>ctrl_anchor.y):
-            y=anchor_A.y-tempy
+            x = anchor_A.x + tempx
+        if anchor_A.y > ctrl_anchor.y:
+            y = anchor_A.y - tempy
         else:
-            y=anchor_A.y+tempy
+            y = anchor_A.y + tempy
     except (ZeroDivisionError, ValueError):
         return Point(0.0, 0.0)
     return Point(x, y)

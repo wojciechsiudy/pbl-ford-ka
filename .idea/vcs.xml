@@ -3,7 +3,7 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/references/nmea_navsat_driver" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/ros2_ws/realsense-ros" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/ros2_ws/src/realsense-ros" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/ros2_ws/src/ros_tutorials" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/ros2_ws/src/rslidar_msg" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/ros2_ws/src/rslidar_sdk" vcs="Git" />
