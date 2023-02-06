@@ -18,7 +18,6 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import String
 from uwb_interfaces.msg import PointPair
 from uwb_interfaces.msg import Point as Point_msg
 

@@ -28,7 +28,7 @@ class AhrsPublisher(Node):
     def __init__(self):
         super().__init__('ahrs')
         self.publisher_ = self.create_publisher(Measure, 'ahrs', 10)
-        timer_period = 0.01 # seconds
+        timer_period = 0.0025 # seconds
         self.ahrsConnection = AhrsConnection()
         self.ahrsConnection.begin()
 

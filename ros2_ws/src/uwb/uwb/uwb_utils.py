@@ -78,11 +78,12 @@ class UwbSerialConnection:
                     for i in range(0, FRAMES_AMOUNT):
                         line = str(self.serial.readline(), encoding="ASCII")
                         try:
-                            distance = float(line[10:].strip())
+                            data = line.split('|')
+                            distance = data[1]
                             if DEBUG:
                                 print("I: ", i, "DISTANCE: ", distance)
                             queue.put(distance)
-                        except ValueError:  # in case of reciver failure
+                        except (ValueError, IndexError):  # in case of reciver failure
                             pass
                 except(TypeError, SerialException, OSError):
                     if DEBUG:
@@ -157,18 +158,3 @@ def get_average(distances):
         return 0  # error
     else:
         return sum / n
-
-# uw_connection = UwbSerialConnection()
-
-
-# MULTITHREAD QUEUE SANDBOX
-# connection = UwbSerialConnection()
-# print("VALS before start:")
-# print(connection.distancesQueue.qsize())
-# p = Process(target=connection._dummy_thread_function)
-# p.start()
-# for i in range (1, 10):
-#     print(connection.get_distance())
-#     time.sleep(1)
-# p.join()
-# print(connection.distancesQueue.qsize())
