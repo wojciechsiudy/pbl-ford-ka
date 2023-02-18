@@ -1,4 +1,4 @@
-from gps.ka_utils import Point
+from ka_utils import Point
 import json
 
 def read_json_file():

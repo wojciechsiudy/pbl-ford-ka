@@ -84,7 +84,7 @@ class UwbSerialConnection:
                                 print("I: ", i, "DISTANCE: ", distance)
                             queue.put(distance)
                         except (ValueError, IndexError):  # in case of reciver failure
-                            pass
+                            print("error")
                 except(TypeError, SerialException, OSError):
                     if DEBUG:
                         print("SERIAL FAILURE")
@@ -125,36 +125,3 @@ class UwbSerialConnection:
             if DEBUG:
                 print("SET_ADDRESSS_CALLED: ", _address)
         self.alive_ping.put("X")
-
-
-# depreciated
-def get_distance_array(serial_path, address, size):
-    uwb_serial = Serial(serial_path, BAUDRATE)
-    distances = []
-    message = address + str(size)
-    uwb_serial.write(bytes(message, "ASCII"))
-    while size > 0:
-        size -= 1
-        line = str(uwb_serial.readline(), encoding="ASCII")
-        try:
-            distance = float(line[8:].strip())
-            distances.append(distance)
-        except ValueError:  # in case of reciver failure
-            pass
-    uwb_serial.close()
-    return distances
-
-
-# depreciated
-def get_average(distances):
-    if len(distances) == 1:
-        return
-    sum = 0
-    n = 0
-    for distance in distances:
-        sum += distance
-        n += 1
-    if n == 0:
-        return 0  # error
-    else:
-        return sum / n

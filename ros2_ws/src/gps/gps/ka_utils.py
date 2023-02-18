@@ -50,8 +50,8 @@ def calculate_position(anchor_A, anchor_B, ctrl_anchor, distance_a, distance_b):
         print("C:", c)
         cos_a = (pow(distance_b,2) + pow(c,2) - pow(distance_a,2)) / abs(2 * distance_b * c)
         print("COS_A:",cos_a)
-        tempx = float(((distance_b * cos_a) /1852) /60)
-        tempy = float(((distance_b * math.sqrt(1 - cos_a * cos_a)) / 1852) / 60)
+        tempy = float(((distance_b * cos_a) /1852) /60)
+        tempx = float(((distance_b * math.sqrt(1 - cos_a * cos_a)) / 1852) / 60)
         print("tempx:", tempx, "tempy:", tempy)
         if anchor_A.x > ctrl_anchor.x:
             x = anchor_A.x - tempx
@@ -61,7 +61,7 @@ def calculate_position(anchor_A, anchor_B, ctrl_anchor, distance_a, distance_b):
             y = anchor_A.y - tempy
         else:
             y = anchor_A.y + tempy
-    except (ZeroDivisionError, ValueError):
+    except (ZeroDivisionError, ValueError, AttributeError):
         return Point(0.0, 0.0)
     return Point(x, y)
 

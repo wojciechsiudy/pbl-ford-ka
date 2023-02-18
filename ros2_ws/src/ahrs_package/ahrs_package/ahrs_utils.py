@@ -8,7 +8,7 @@ from ahrs_interface.msg import MeasureValue, Measure
       
         
 class AhrsConnection:
-    def __init__(self, serial_path="/dev/ttyS1"): 
+    def __init__(self, serial_path="/dev/AHRS"):
         self.ahrs_serial = Serial(serial_path, 115200)
         self.measures_queue = Queue()
         self.last_value = Measure()

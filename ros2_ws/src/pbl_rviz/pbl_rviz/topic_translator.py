@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 
+import json
 
 from uwb_interfaces.msg import PointPair
 from uwb_interfaces.msg import Point as Point_msg
@@ -37,6 +38,7 @@ class TopicTranslator(Node):
         self.calculated_subscription
         self.calculated_publisher = self.create_publisher(PointStamped, 'rviz_calculated', 10)
         self.gps_publisher = self.create_publisher(PointStamped, 'rviz_gps', 10)
+        self.save_counter = 0
 
     def gps_callback(self, msg):
         self.gps_position = read_point_from_message(msg)
@@ -49,11 +51,21 @@ class TopicTranslator(Node):
         self.calculated_position = read_point_from_message(msg)
 
     def timer_callback(self):
-        print(self.calculated_position.x)
-        calculated = self.transform_to_dg_point(self.calculated_position)
-        self.calculated_publisher.publish(calculated)
-        gps = self.transform_to_dg_point(self.gps_position)
-        self.gps_publisher.publish(gps)
+        #print(self.calculated_position.x)
+        #calculated = self.transform_to_dg_point(self.calculated_position)
+        #self.calculated_publisher.publish(calculated)
+        #gps = self.transform_to_dg_point(self.gps_position)
+        #self.gps_publisher.publish(gps)
+        with open("/home/wojtek/pbl/bag-json/" + str(self.save_counter) + ".json", "w+") as outfile:
+            outfile.write(json.dumps({'gps': {
+                                                'x': self.gps_position.x,
+                                                'y': self.gps_position.y},
+                                      'calculated': {
+                                                'x': self.calculated_position.x,
+                                                'y': self.calculated_position.y
+                                      }}, indent=3))
+        self.save_counter += 1
+
 
     def transform_to_dg_point(self, point):
         result = PointStamped()
