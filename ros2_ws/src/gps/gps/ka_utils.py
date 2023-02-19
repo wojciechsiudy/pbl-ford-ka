@@ -47,12 +47,12 @@ def calculate_position(anchor_A, anchor_B, ctrl_anchor, distance_a, distance_b):
             scale_offset_factor += 1.005
             distance_a *= scale_offset_factor
             distance_b *= scale_offset_factor
-        print("C:", c)
+        #print("C:", c)
         cos_a = (pow(distance_b,2) + pow(c,2) - pow(distance_a,2)) / abs(2 * distance_b * c)
-        print("COS_A:",cos_a)
+        #print("COS_A:",cos_a)
         tempy = float(((distance_b * cos_a) /1852) /60)
         tempx = float(((distance_b * math.sqrt(1 - cos_a * cos_a)) / 1852) / 60)
-        print("tempx:", tempx, "tempy:", tempy)
+        #print("tempx:", tempx, "tempy:", tempy)
         if anchor_A.x > ctrl_anchor.x:
             x = anchor_A.x - tempx
         else:
