@@ -68,8 +68,8 @@ with open("/home/wojtek/pbl/data.csv", newline="") as file:
             anchor_a,
             anchor_b,
             Point(float(row[0]), float(row[1])),
-            geodesic(pa, pg).m,
-            geodesic(pb, pg).m
+            float(row[4]),
+            float(row[5])
         )
         if calculated.x != 0.0 and calculated.y != 0.0:
             calc_x.append(calculated.x)
