@@ -16,55 +16,71 @@
 # Silesian University of Technology
 
 import rclpy
+import time
 from rclpy.node import Node
 from builtins import float
-from uwb_interfaces.msg import UwbMessage, Point, PointPair
+from uwb_interfaces.msg import UwbPair, Point, PointPair, UwbMessage
 
-from uwb.uwb_utils import UwbSerialConnection
+from pbl_utils.ranging import UwbBluetoothConnection, UwbFatalError, UwbIncorrectData, UwbData
 
+def make_uwb_message(data: UwbData) -> UwbMessage:
+    message = UwbMessage()
+    message.address = data.tag_address
+    message.distance = data.distance
+    message.power = data.power
+    return message
+
+def make_uwb_pair_message(nearest_data: UwbData, second_data: UwbData) -> UwbPair:
+    message = UwbPair()
+    message.nearest = make_uwb_message(nearest_data)
+    message.second = make_uwb_message(second_data)
+    return message
 
 class UwbNode(Node):
-
+    """
+    Class holding ROS UWB node
+    """
     def __init__(self):
         super().__init__('uwb_publisher')
-        self.publisher_ = self.create_publisher(UwbMessage, 'uwb', 10)
-        timer_period = 0.05  # seconds
-        self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.address_nearest = "none"
-        self.address_second = "none"
-        self.connection_l = UwbSerialConnection("/dev/UWBl")
-        self.connection_r = UwbSerialConnection("/dev/UWBr")
+        self.publisher_ = self.create_publisher(UwbPair, 'uwb', 10)
+        #timer_period = 0.5  # seconds
+        #self.timer = self.create_timer(timer_period, self.timer_callback)
+        try:
+            self.connection = UwbBluetoothConnection()
+        except UwbFatalError:
+            self.get_logger().info(
+            "Fatal connection error. Exiting!")
+            raise SystemExit
+        self.connection.debug_level = 3
         self.subscription = self.create_subscription(
             PointPair,
             'anchors',
-            self.listener_callback,
+            self.anchors_callback,
             10)
-        self.connection_l.begin()
-        self.connection_r.begin()
+        self.connection.connect()
         self.get_logger().info(
-            "Setting up uwb publisher. No data will be logged here to keep performance. If you want to see data in "
-            "console toggle 'DEBUG' value in uwb_utils.py to True.")
+            "Node is set up.")
 
-    def listener_callback(self, msg):
-        changed = False
-        if not self.address_nearest == msg.nearest.address:
-            self.address_nearest = msg.nearest.address
-            changed = True
-        if not self.address_second == msg.second.address:
-            self.address_second = msg.second.address
-            changed = True
-        if changed:
-            self.connection_l.set_address(self.address_nearest)
-            self.connection_r.set_address(self.address_second)
-
-
-    def timer_callback(self):
-        distances = UwbMessage()
-        distances.l = float(self.connection_l.get_distance())
-        distances.r = float(self.connection_r.get_distance())
-        distances.t = 1.0
-        self.publisher_.publish(distances)
-        # self.get_logger().info('Publishing: "%s"' % msg.data)
+    def anchors_callback(self, msg):
+        """
+        This method is involved when "anchors" topic is fed with data
+        """
+        self.get_logger().info(
+            "Anchors ticked, so we do.")
+        try: # read data and publish it
+            uwb_data_nearest = self.connection.read_uwb_data(msg.nearest.address)
+            uwb_data_second = self.connection.read_uwb_data(msg.second.address)
+            if uwb_data_nearest is int or uwb_data_second is int:
+                self.get_logger().info(
+            "Strange anwser recived Dropping frame.")
+                return
+            message = make_uwb_pair_message(uwb_data_nearest, uwb_data_second)
+            self.publisher_.publish(message)
+        except ConnectionError:
+            self.connection.restart()
+        except UwbIncorrectData: # if data was wrong dismiss publishing
+            self.get_logger().info(
+            "Wrong data recived.")
 
 
 def main(args=None):
@@ -77,8 +93,6 @@ def main(args=None):
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    uwb_node.connection_l.end()
-    uwb_node.connection_r.end()
     uwb_node.destroy_node()
     rclpy.shutdown()
 

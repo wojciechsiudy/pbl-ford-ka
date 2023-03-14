@@ -1,3 +1,3 @@
-float32 t 0.0
-float32 l 0.0
-float32 r 0.0
+string address 0.0
+float64 distance 0.0
+float64 power 0.0

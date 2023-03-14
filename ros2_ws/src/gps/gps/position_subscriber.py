@@ -21,8 +21,8 @@ from rclpy.node import Node
 from uwb_interfaces.msg import PointPair
 from uwb_interfaces.msg import Point as Point_msg
 
-from pbl_utils.mapping import Point
-import pbl_utils.pointsDB
+from pbl_utils.mapping import Point, get_distance
+from pbl_utils.pointsDB import getPoints
 
 
 class PositionSubscriber(Node):
@@ -44,11 +44,11 @@ class PositionSubscriber(Node):
     def listener_callback(self, msg):
         coordinates = Point(msg.x, msg.y)
         points_around = []
-        for point in gps.pointsDB.getPoints(1):
-            distance = coordinates.get_distance_to(point)
+        for point in getPoints(1):
+            distance = get_distance(coordinates, point)
             print(point.address, distance)
             if distance < float('inf'):
-                points_around.append((point, coordinates.get_distance_to(point)))
+                points_around.append((point, get_distance(coordinates, point)))
         points_around.sort(key=lambda x: x[1])
         for tpl in points_around:
             print("SORT TEST", tpl[0].address, tpl[1])

@@ -18,6 +18,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Point.msg"
   "msg/PointPair.msg"
   "msg/UwbMessage.msg"
+  "msg/UwbPair.msg"
 )
 
 if(BUILD_TESTING)
