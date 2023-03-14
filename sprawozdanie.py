@@ -1,10 +1,7 @@
 import matplotlib.pyplot as plt
-import json
 import csv
-import os
-from geopy.distance import geodesic
 from ros2_ws.src.gps.gps.ka_utils import Point, calculate_position
-from ros2_ws.src.gps.gps.pointsDB import load_points_from_json
+from pbl_utils.pointsDB import load_points_from_json
 
 ## load jsons
 #jsons = []
@@ -64,12 +61,15 @@ with open("/home/wojtek/pbl/data.csv", newline="") as file:
         pa = (anchor_a.x, anchor_a.y)
         pb = (anchor_b.x, anchor_b.y)
         pg = (gps_pos.x, gps_pos.y)
+        point_pg = Point(gps_pos.x, gps_pos.y)
         calculated = calculate_position(
             anchor_a,
             anchor_b,
             Point(float(row[0]), float(row[1])),
-            float(row[4]),
-            float(row[5])
+            #float(row[4]),
+            #float(row[5])
+            point_pg.get_distance_to(anchor_a),
+            point_pg.get_distance_to(anchor_b)
         )
         if calculated.x != 0.0 and calculated.y != 0.0:
             calc_x.append(calculated.x)

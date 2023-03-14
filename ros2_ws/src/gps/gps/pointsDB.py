@@ -1,8 +1,8 @@
-from ka_utils import Point
+from pbl_utils.maping import Point
 import json
 
 def read_json_file():
-    f = open("/home/wojtek/pbl/pbl-ford-ka/ros2_ws/src/gps/gps/GPSdata.json")
+    f = open("/ros2_ws/src/gps/gps/GPSdata.json")
     return json.load(f)
 
 def load_points_from_json():
@@ -21,6 +21,3 @@ def getPoints(subset):
     else:
         return None
 
-#test
-for point in getPoints(1):
-    print(point.x, point.y, point.address)

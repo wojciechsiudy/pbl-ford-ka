@@ -8,7 +8,7 @@ from uwb_interfaces.msg import PointPair
 from uwb_interfaces.msg import Point as Point_msg, UwbMessage
 from geometry_msgs.msg import PointStamped
 
-from gps.ka_utils import Point
+from pbl_utils.maping import Point
 
 class TopicTranslator(Node):
     def __init__(self):

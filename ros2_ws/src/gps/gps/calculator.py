@@ -21,13 +21,15 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from uwb_interfaces.msg import Point as Point_msg, PointPair, UwbMessage
 
-from gps.ka_utils import Point, calculate_position
-import gps.pointsDB
+from pbl_utils.maping import Point, calculate_position
+import pbl_utils.pointsDB
 
 
 class PositionCalculator(Node):
 
     def __init__(self):
+        import os
+        os.path
         super().__init__('calculator')
         self.distance_l = 0.0
         self.distance_r = 0.0
