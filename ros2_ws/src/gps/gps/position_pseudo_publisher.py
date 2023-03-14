@@ -21,7 +21,8 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from uwb_interfaces.msg import Point as Point_msg
 
-from gps.ka_utils import Point, get_position
+from pbl_utils.mapping import Point
+from pbl_utils.mapping import get_position
 
 class PositionPublisher(Node):
 

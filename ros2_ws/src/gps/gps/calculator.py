@@ -21,7 +21,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from uwb_interfaces.msg import Point as Point_msg, PointPair, UwbMessage
 
-from pbl_utils.maping import Point, calculate_position
+from pbl_utils.mapping import Point, calculate_position
 import pbl_utils.pointsDB
 
 

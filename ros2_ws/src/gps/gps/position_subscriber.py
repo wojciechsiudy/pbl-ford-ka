@@ -21,8 +21,8 @@ from rclpy.node import Node
 from uwb_interfaces.msg import PointPair
 from uwb_interfaces.msg import Point as Point_msg
 
-from gps.ka_utils import Point
-import gps.pointsDB
+from pbl_utils.mapping import Point
+import pbl_utils.pointsDB
 
 
 class PositionSubscriber(Node):
