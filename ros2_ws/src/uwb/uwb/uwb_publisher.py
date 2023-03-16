@@ -70,14 +70,16 @@ class UwbNode(Node):
         try: # read data and publish it
             uwb_data_nearest = self.connection.read_uwb_data(msg.nearest.address)
             uwb_data_second = self.connection.read_uwb_data(msg.second.address)
-            if uwb_data_nearest is int or uwb_data_second is int:
-                self.get_logger().info(
-            "Strange anwser recived Dropping frame.")
-                return
+            # if uwb_data_nearest is int or uwb_data_second is int:
+            #     self.get_logger().info(
+            # "Strange anwser recived Dropping frame.")
+            #     return
             message = make_uwb_pair_message(uwb_data_nearest, uwb_data_second)
             self.publisher_.publish(message)
         except ConnectionError:
             self.connection.restart()
+            self.get_logger().info(
+            "Restarting.")
         except UwbIncorrectData: # if data was wrong dismiss publishing
             self.get_logger().info(
             "Wrong data recived.")

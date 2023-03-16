@@ -32,7 +32,7 @@ class PositionSubscriber(Node):
         self.anchor = Point(0.0, 0.0, "none")
         self.anchor_second = Point(0.0, 0.0, "none")
         self.publisher_ = self.create_publisher(PointPair, 'anchors', 10)
-        timer_period = 0.1  # seconds
+        timer_period = 0.01  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.subscription = self.create_subscription(
             Point_msg,
@@ -50,13 +50,13 @@ class PositionSubscriber(Node):
             if distance < float('inf'):
                 points_around.append((point, get_distance(coordinates, point)))
         points_around.sort(key=lambda x: x[1])
-        for tpl in points_around:
-            print("SORT TEST", tpl[0].address, tpl[1])
+        #for tpl in points_around:
+        #    print("SORT TEST", tpl[0].address, tpl[1])
 
         self.anchor = points_around[0][0]
         self.anchor_second = points_around[1][0]
-        self.get_logger().info(
-            'Position: %f; %f. Nearest anchor: %s' % (coordinates.x, coordinates.y, self.anchor.address))
+        #self.get_logger().info(
+        #    'Position: %f; %f. Nearest anchor: %s' % (coordinates.x, coordinates.y, self.anchor.address))
 
     def timer_callback(self):
         msg = PointPair()
