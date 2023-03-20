@@ -32,7 +32,7 @@ class PositionSubscriber(Node):
         self.anchor = Point(0.0, 0.0, "none")
         self.anchor_second = Point(0.0, 0.0, "none")
         self.publisher_ = self.create_publisher(PointPair, 'anchors', 10)
-        timer_period = 0.01  # seconds
+        timer_period = 0.02  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.subscription = self.create_subscription(
             Point_msg,

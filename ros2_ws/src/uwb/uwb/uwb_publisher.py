@@ -24,6 +24,8 @@ from uwb_interfaces.msg import UwbPair, Point, PointPair, UwbMessage
 from pbl_utils.ranging import UwbBluetoothConnection, UwbFatalError, UwbIncorrectData, UwbData
 
 def make_uwb_message(data: UwbData) -> UwbMessage:
+    if not isinstance(data, UwbData):
+        raise UwbIncorrectData
     message = UwbMessage()
     message.address = data.tag_address
     message.distance = data.distance
@@ -42,6 +44,7 @@ class UwbNode(Node):
     """
     def __init__(self):
         super().__init__('uwb_publisher')
+        self.counter = 0
         self.publisher_ = self.create_publisher(UwbPair, 'uwb', 10)
         #timer_period = 0.5  # seconds
         #self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -51,7 +54,7 @@ class UwbNode(Node):
             self.get_logger().info(
             "Fatal connection error. Exiting!")
             raise SystemExit
-        self.connection.debug_level = 3
+        self.connection.debug_level = 1
         self.subscription = self.create_subscription(
             PointPair,
             'anchors',
@@ -65,15 +68,14 @@ class UwbNode(Node):
         """
         This method is involved when "anchors" topic is fed with data
         """
+        self.counter += 1
         self.get_logger().info(
-            "Anchors ticked, so we do.")
+            "Frame id: " +
+            str(self.counter) +
+            ". Anchors ticked, so we do.")
         try: # read data and publish it
             uwb_data_nearest = self.connection.read_uwb_data(msg.nearest.address)
             uwb_data_second = self.connection.read_uwb_data(msg.second.address)
-            # if uwb_data_nearest is int or uwb_data_second is int:
-            #     self.get_logger().info(
-            # "Strange anwser recived Dropping frame.")
-            #     return
             message = make_uwb_pair_message(uwb_data_nearest, uwb_data_second)
             self.publisher_.publish(message)
         except ConnectionError:
